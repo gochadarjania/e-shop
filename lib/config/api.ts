@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = 'http://65.108.50.33';
+const API_BASE_URL = 'https://65.108.50.33';
 
 export const API_ENDPOINTS = {
   // Authentication
