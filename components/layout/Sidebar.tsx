@@ -1,7 +1,7 @@
 'use client';
 
 import { MdDashboard, MdPeople, MdInventory, MdShoppingCart, MdSettings, MdCategory } from 'react-icons/md';
-import { useAuth } from '@/lib/context/AuthContext';
+import { useAdminAuth } from '@/lib/context/AdminAuthContext';
 import SidebarOverlay from './SidebarOverlay';
 import SidebarLogo from './SidebarLogo';
 import SidebarNavItem from './SidebarNavItem';
@@ -14,21 +14,21 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
-  const { logout, user } = useAuth();
+  const { logout, user } = useAdminAuth();
 
   const menuSections = [
     {
       items: [
-        { id: 'dashboard', title: 'Dashboard', icon: MdDashboard, path: '/' },
-        { id: 'orders', title: 'Orders', icon: MdShoppingCart, path: '/orders' },
-        { id: 'products', title: 'Products', icon: MdInventory, path: '/products' },
-        { id: 'categories', title: 'Categories', icon: MdCategory, path: '/categories' },
-        { id: 'customers', title: 'Customers', icon: MdPeople, path: '/customers' },
+        { id: 'dashboard', title: 'Dashboard', icon: MdDashboard, path: '/admin/dashboard' },
+        { id: 'orders', title: 'Orders', icon: MdShoppingCart, path: '/admin/orders' },
+        { id: 'products', title: 'Products', icon: MdInventory, path: '/admin/products' },
+        { id: 'categories', title: 'Categories', icon: MdCategory, path: '/admin/categories' },
+        { id: 'customers', title: 'Customers', icon: MdPeople, path: '/admin/customers' },
       ]
     },
     {
       items: [
-        { id: 'settings', title: 'Settings', icon: MdSettings, path: '/settings' },
+        { id: 'settings', title: 'Settings', icon: MdSettings, path: '/admin/settings' },
       ]
     }
   ];

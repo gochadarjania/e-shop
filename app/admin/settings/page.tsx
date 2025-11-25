@@ -1,11 +1,11 @@
 'use client';
 
-import { useAuth } from '@/lib/context/AuthContext';
-import authService from '@/lib/services/authService';
+import { useAdminAuth } from '@/lib/context/AdminAuthContext';
+import adminAuthService from '@/lib/services/adminAuthService';
 
 export default function Settings() {
-  const { user } = useAuth();
-  const token = authService.getToken();
+  const { user } = useAdminAuth();
+  const token = adminAuthService.getToken();
 
   return (
     <div className="p-3 md:p-6">

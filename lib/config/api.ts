@@ -1,11 +1,13 @@
 // API Configuration
-const API_BASE_URL = 'http://132.145.240.55';
+const API_BASE_URL = 'http://65.108.50.33';
 
 export const API_ENDPOINTS = {
   // Authentication
   REGISTER: `${API_BASE_URL}/connect/register`,
   LOGIN: `${API_BASE_URL}/connect/token`,
   USER_INFO: `${API_BASE_URL}/connect/userinfo`,
+  ADMIN_LOGIN: `${API_BASE_URL}/admin/connect/token`,
+  ADMIN_USER_INFO: `${API_BASE_URL}/admin/connect/userinfo`,
 
   // Products (Public)
   PRODUCTS: `${API_BASE_URL}/api/products`,
@@ -26,9 +28,16 @@ export const API_ENDPOINTS = {
   // Orders
   ORDERS: `${API_BASE_URL}/api/orders`,
 
+  // Categories (Public)
+  CATEGORIES: `${API_BASE_URL}/api/categories`,
+  CATEGORY_BY_SLUG: (slug: string) => `${API_BASE_URL}/api/categories/slug/${slug}`,
+  CATEGORIES_HOME: `${API_BASE_URL}/api/categories/home`,
+  CATEGORY_PRODUCTS_PUBLIC: (categoryId: string) => `${API_BASE_URL}/api/categories/${categoryId}/products`,
+
   // Categories (Admin)
   CATEGORIES_ADMIN: `${API_BASE_URL}/admin/categories`,
   CATEGORY_ADMIN_BY_ID: (id: string) => `${API_BASE_URL}/admin/categories/${id}`,
+  CATEGORY_IMAGE: (id: string) => `${API_BASE_URL}/admin/categories/${id}/image`,
 
   // Product-Category Relationships (Admin)
   PRODUCT_CATEGORIES: (productId: string | number) => `${API_BASE_URL}/admin/categories/products/${productId}/categories`,

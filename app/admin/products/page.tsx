@@ -13,12 +13,16 @@ interface Product {
   price?: number;
   currency?: string;
   shortDesc?: string;
+  mainImageUrl?: string;
 }
 
 interface Category {
   id: string;
   name: string;
   isActive?: boolean;
+  slug?: string;
+  imageUrl?: string;
+  showOnHomePage?: boolean;
 }
 
 export default function Products() {
@@ -280,8 +284,16 @@ export default function Products() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center">
-                      <div className="h-10 w-10 flex-shrink-0 bg-gray-200 rounded mr-3 flex items-center justify-center">
-                        <span className="text-xs text-gray-500">No img</span>
+                      <div className="h-10 w-10 flex-shrink-0 rounded mr-3 flex items-center justify-center bg-gray-100 overflow-hidden border border-gray-200">
+                        {product.mainImageUrl ? (
+                          <img
+                            src={product.mainImageUrl}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xs text-gray-500">No img</span>
+                        )}
                       </div>
                       <div>
                         <div className="text-sm font-medium text-gray-900">
@@ -336,9 +348,17 @@ export default function Products() {
             <div key={product.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
               <div className="flex items-start space-x-3">
                 <input type="checkbox" className="rounded border-gray-300 mt-1" />
-                <div className="h-16 w-16 flex-shrink-0 bg-gray-200 rounded flex items-center justify-center">
-                  <span className="text-xs text-gray-500">No img</span>
-                </div>
+                      <div className="h-16 w-16 flex-shrink-0 bg-gray-100 rounded flex items-center justify-center overflow-hidden border border-gray-200">
+                        {product.mainImageUrl ? (
+                          <img
+                            src={product.mainImageUrl}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xs text-gray-500">No img</span>
+                        )}
+                      </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between mb-1">
                     <h3 className="text-sm font-medium text-gray-900">

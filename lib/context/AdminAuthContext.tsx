@@ -15,24 +15,17 @@ interface LoginCredentials {
   password: string;
 }
 
-interface RegisterData {
-  email: string;
-  fullName: string;
-  password: string;
-}
-
-interface AuthContextType {
+interface AdminAuthContextType {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
   login: (credentials: LoginCredentials) => Promise<unknown>;
-  register: (userData: RegisterData) => Promise<unknown>;
   logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+const AdminAuthContext = createContext<AdminAuthContextType | null>(null);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -65,25 +58,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (credentials: LoginCredentials) => {
     try {
       const response = await adminAuthService.login(credentials);
-      console.log('Login response:', response);
 
       const userInfo = await adminAuthService.getUserInfo();
-      console.log('User info:', userInfo);
 
       setUser(userInfo as User);
       setIsAuthenticated(true);
       return response;
     } catch (error) {
       console.error('Login error in context:', error);
-      throw error;
-    }
-  };
-
-  const register = async (userData: RegisterData) => {
-    try {
-      const response = await adminAuthService.register(userData);
-      return response;
-    } catch (error) {
       throw error;
     }
   };
@@ -99,17 +81,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loading,
     isAuthenticated,
     login,
-    register,
     logout,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
+export const useAdminAuth = () => {
+  const context = useContext(AdminAuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error('useAdminAuth must be used within AdminAuthProvider');
   }
   return context;
 };

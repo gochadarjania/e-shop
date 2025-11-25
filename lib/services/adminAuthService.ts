@@ -5,12 +5,6 @@ interface LoginCredentials {
   password: string;
 }
 
-interface RegisterData {
-  email: string;
-  fullName: string;
-  password: string;
-}
-
 interface LoginResponse {
   accessToken: string;
 }
@@ -27,36 +21,9 @@ interface UserInfo {
  * Handles user registration, login, and token management
  */
 
-class AuthService {
-  private TOKEN_KEY = 'accessToken';
-  private USER_KEY = 'user';
-
-  /**
-   * Register a new user
-   * @param userData - { email, fullName, password }
-   * @returns Registration response
-   */
-  async register(userData: RegisterData): Promise<unknown> {
-    try {
-      const response = await fetch(API_ENDPOINTS.REGISTER, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Registration failed');
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
-    }
-  }
+class AdminAuthService {
+  private TOKEN_KEY = 'adminAccessToken';
+  private USER_KEY = 'adminUser';
 
   /**
    * Login user and save token
@@ -65,7 +32,7 @@ class AuthService {
    */
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
-      const response = await fetch(API_ENDPOINTS.LOGIN, {
+      const response = await fetch(API_ENDPOINTS.ADMIN_LOGIN, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -103,7 +70,7 @@ class AuthService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(API_ENDPOINTS.USER_INFO, {
+      const response = await fetch(API_ENDPOINTS.ADMIN_USER_INFO, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -190,11 +157,17 @@ class AuthService {
    */
   getAuthHeaders(): Record<string, string> {
     const token = this.getToken();
-    return {
-      'Authorization': `Bearer ${token}`,
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return headers;
   }
 }
 
-export default new AuthService();
+const adminAuthService = new AdminAuthService();
+export default adminAuthService;

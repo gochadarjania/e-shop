@@ -12,6 +12,8 @@ interface Category {
   parentCategoryId?: string | null;
   displayOrder?: number;
   isActive?: boolean;
+  imageUrl?: string;
+  showOnHomePage?: boolean;
 }
 
 interface CategoryDrawerProps {
@@ -28,10 +30,15 @@ const CategoryDrawer = ({ isOpen, onClose, category, onSuccess }: CategoryDrawer
     description: '',
     parentCategoryId: '',
     displayOrder: '0',
+    showOnHomePage: false,
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [imageError, setImageError] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [removeExistingImage, setRemoveExistingImage] = useState(false);
 
   // Load all categories for parent selection
   useEffect(() => {
@@ -49,7 +56,11 @@ const CategoryDrawer = ({ isOpen, onClose, category, onSuccess }: CategoryDrawer
         description: category.description || '',
         parentCategoryId: category.parentCategoryId || '',
         displayOrder: category.displayOrder?.toString() || '0',
+        showOnHomePage: !!category.showOnHomePage,
       });
+      setImagePreview(category.imageUrl || null);
+      setRemoveExistingImage(false);
+      setImageFile(null);
     } else {
       // Reset form for new category
       setFormData({
@@ -58,10 +69,23 @@ const CategoryDrawer = ({ isOpen, onClose, category, onSuccess }: CategoryDrawer
         description: '',
         parentCategoryId: '',
         displayOrder: '0',
+        showOnHomePage: false,
       });
+      setImagePreview(null);
+      setRemoveExistingImage(false);
+      setImageFile(null);
     }
     setError('');
+    setImageError('');
   }, [category, isOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   const loadCategories = async () => {
     try {
@@ -78,6 +102,44 @@ const CategoryDrawer = ({ isOpen, onClose, category, onSuccess }: CategoryDrawer
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: checked,
+    }));
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setImageError('Only JPG, PNG, or WEBP images are allowed');
+      return;
+    }
+
+    setImageError('');
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    setImagePreview(URL.createObjectURL(file));
+    setImageFile(file);
+    setRemoveExistingImage(false);
+  };
+
+  const handleRemoveImage = () => {
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    setImagePreview(null);
+    setImageFile(null);
+    setRemoveExistingImage(true);
   };
 
   // Auto-generate slug from name
@@ -117,14 +179,35 @@ const CategoryDrawer = ({ isOpen, onClose, category, onSuccess }: CategoryDrawer
         parentCategoryId: formData.parentCategoryId || null,
         displayOrder: parseInt(formData.displayOrder),
         isActive: true,
+        showOnHomePage: formData.showOnHomePage,
       };
+
+      let categoryId = category?.id;
 
       if (category) {
         // Update existing category
         await categoryService.updateCategory(category.id, categoryData);
+        categoryId = category.id;
       } else {
         // Create new category
-        await categoryService.createCategory(categoryData);
+        const response: any = await categoryService.createCategory(categoryData);
+        categoryId = response?.id;
+      }
+
+      if (categoryId) {
+        if (imageFile) {
+          try {
+            await categoryService.uploadCategoryImage(categoryId, imageFile);
+          } catch (imageErr) {
+            setImageError((imageErr as Error).message || 'Failed to upload image');
+          }
+        } else if (removeExistingImage && category?.imageUrl) {
+          try {
+            await categoryService.deleteCategoryImage(categoryId);
+          } catch (imageErr) {
+            setImageError((imageErr as Error).message || 'Failed to delete image');
+          }
+        }
       }
 
       // Call success callback
@@ -267,6 +350,58 @@ const CategoryDrawer = ({ isOpen, onClose, category, onSuccess }: CategoryDrawer
               />
               <p className="text-xs text-gray-500 mt-1">
                 Lower numbers appear first in the list
+              </p>
+            </div>
+
+            {/* Show on Home Page */}
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="showOnHomePage"
+                name="showOnHomePage"
+                checked={formData.showOnHomePage}
+                onChange={handleCheckboxChange}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label htmlFor="showOnHomePage" className="text-sm text-gray-700">
+                Display this category on the home page
+              </label>
+            </div>
+
+            {/* Image Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category Image
+              </label>
+              {imageError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded text-xs mb-3">
+                  {imageError}
+                </div>
+              )}
+              {imagePreview ? (
+                <div className="relative w-full h-48 border border-gray-200 rounded-lg overflow-hidden mb-3">
+                  <img src={imagePreview} alt="Category" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="absolute top-2 right-2 px-3 py-1 text-xs font-medium text-white bg-red-500 rounded hover:bg-red-600"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div className="w-full h-48 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-500 text-sm mb-3">
+                  No image selected
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Recommended formats: JPG, PNG, WEBP. Max size 5MB.
               </p>
             </div>
           </div>

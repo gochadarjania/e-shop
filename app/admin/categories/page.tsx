@@ -13,6 +13,8 @@ interface Category {
   parentCategoryId?: string | null;
   displayOrder?: number;
   isActive?: boolean;
+  imageUrl?: string;
+  showOnHomePage?: boolean;
 }
 
 export default function Categories() {
@@ -52,7 +54,6 @@ export default function Categories() {
   };
 
   useEffect(() => {
-    // Prevent double fetch in React Strict Mode (development)
     if (hasFetched.current) return;
     hasFetched.current = true;
 
@@ -183,6 +184,9 @@ export default function Categories() {
                 Order
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Image
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Name
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -190,6 +194,9 @@ export default function Categories() {
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Parent
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Homepage
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
@@ -214,6 +221,19 @@ export default function Categories() {
                       {category.displayOrder}
                     </div>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {category.imageUrl ? (
+                      <img
+                        src={category.imageUrl}
+                        alt={category.name}
+                        className="w-16 h-16 rounded object-cover border border-gray-200"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded border border-dashed border-gray-200 flex items-center justify-center text-xs text-gray-400">
+                        No image
+                      </div>
+                    )}
+                  </td>
                   <td className="px-6 py-4">
                     <div>
                       <div className="text-sm font-medium text-gray-900">
@@ -233,6 +253,17 @@ export default function Categories() {
                     <div className="text-sm text-gray-600">
                       {getParentName(category.parentCategoryId)}
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                        category.showOnHomePage
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
+                      {category.showOnHomePage ? 'Visible' : 'Hidden'}
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
@@ -290,6 +321,17 @@ export default function Categories() {
         ) : (
           sortedCategories.map((category) => (
             <div key={category.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  {category.imageUrl ? (
+                    <img
+                      src={category.imageUrl}
+                      alt={category.name}
+                      className="w-full h-40 object-cover rounded-lg mb-3"
+                    />
+                  ) : (
+                    <div className="w-full h-40 border-2 border-dashed border-gray-200 rounded-lg mb-3 flex items-center justify-center text-sm text-gray-400">
+                      No image
+                    </div>
+                  )}
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
@@ -330,6 +372,17 @@ export default function Categories() {
                     <span className="text-gray-600">
                       Parent: {getParentName(category.parentCategoryId)}
                     </span>
+                      </div>
+                      <div className="mt-2 text-xs font-medium">
+                        <span
+                          className={`px-2 py-1 rounded-full ${
+                            category.showOnHomePage
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-gray-100 text-gray-500'
+                          }`}
+                        >
+                          {category.showOnHomePage ? 'Shown on home' : 'Hidden from home'}
+                        </span>
                   </div>
                 </div>
                 <div className="flex flex-col gap-1 ml-2">

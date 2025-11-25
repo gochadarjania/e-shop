@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/context/AuthContext';
+import { AdminAuthProvider, useAdminAuth } from '@/lib/context/AdminAuthContext';
 
-export default function Login() {
+function LoginForm() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login } = useAdminAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -29,8 +29,8 @@ export default function Login() {
 
     try {
       await login(formData);
-      // Redirect to home/dashboard after successful login
-      router.push('/');
+      // Redirect to admin dashboard after successful login
+      router.push('/admin/dashboard');
     } catch (err) {
       setError((err as Error).message || 'Login failed. Please check your credentials.');
     } finally {
@@ -100,5 +100,13 @@ export default function Login() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Login() {
+  return (
+    <AdminAuthProvider>
+      <LoginForm />
+    </AdminAuthProvider>
   );
 }

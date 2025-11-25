@@ -12,6 +12,7 @@ interface Product {
   price?: number;
   currency?: string;
   shortDesc?: string;
+  mainImageUrl?: string;
 }
 
 interface ProductImage {
@@ -25,6 +26,8 @@ interface Category {
   name: string;
   slug?: string;
   isActive?: boolean;
+  imageUrl?: string;
+  showOnHomePage?: boolean;
 }
 
 interface ProductDrawerProps {
@@ -214,19 +217,19 @@ const ProductDrawer = ({ isOpen, onClose, product, onSuccess }: ProductDrawerPro
 
       let productId;
 
+      const productPayload = {
+        ...formData,
+        price: parseFloat(formData.price),
+        categoryIds: selectedCategoryIds,
+      };
+
       if (product) {
         // Update existing product
-        await productsService.updateProduct(product.id, {
-          ...formData,
-          price: parseFloat(formData.price),
-        });
+        await productsService.updateProduct(product.id, productPayload);
         productId = product.id;
       } else {
         // Create new product
-        const response: any = await productsService.createProduct({
-          ...formData,
-          price: parseFloat(formData.price),
-        });
+        const response: any = await productsService.createProduct(productPayload);
         productId = response.id;
       }
 
@@ -237,43 +240,6 @@ const ProductDrawer = ({ isOpen, onClose, product, onSuccess }: ProductDrawerPro
         } catch (err) {
           setImageError((err as Error).message || 'Failed to upload images');
           // Don't return - product was saved successfully
-        }
-      }
-
-      // Update product categories (only for existing products)
-      if (product) {
-        try {
-          // Get current categories
-          const currentCategories: any = await categoryService.getProductCategories(productId);
-          const currentCategoryIds = Array.isArray(currentCategories)
-            ? currentCategories.map((cat: Category) => cat.id)
-            : [];
-
-          // Find categories to add and remove
-          const categoriesToAdd = selectedCategoryIds.filter(id => !currentCategoryIds.includes(id));
-          const categoriesToRemove = currentCategoryIds.filter(id => !selectedCategoryIds.includes(id));
-
-          // Remove old categories
-          for (const categoryId of categoriesToRemove) {
-            await categoryService.removeProductFromCategory(productId, categoryId);
-          }
-
-          // Add new categories
-          for (const categoryId of categoriesToAdd) {
-            await categoryService.addProductToCategory(productId, categoryId);
-          }
-        } catch (err) {
-          console.error('Failed to update categories:', err);
-          // Don't fail the whole operation
-        }
-      } else {
-        // For new products, just add selected categories
-        try {
-          for (const categoryId of selectedCategoryIds) {
-            await categoryService.addProductToCategory(productId, categoryId);
-          }
-        } catch (err) {
-          console.error('Failed to add categories:', err);
         }
       }
 

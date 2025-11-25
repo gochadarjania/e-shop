@@ -1,5 +1,5 @@
 import { API_ENDPOINTS } from '../config/api';
-import authService from './authService';
+import adminAuthService from './adminAuthService';
 
 interface CategoryData {
   name: string;
@@ -8,6 +8,7 @@ interface CategoryData {
   parentCategoryId?: string | null;
   displayOrder: number;
   isActive?: boolean;
+  showOnHomePage?: boolean;
 }
 
 /**
@@ -17,6 +18,68 @@ interface CategoryData {
 
 class CategoryService {
   /**
+   * Get active categories (public, paginated)
+   * @param page - Page number (default: 1)
+   * @param size - Page size (default: 20)
+   * @returns Categories list with pagination
+   */
+  async getCategories(page = 1, size = 20): Promise<unknown> {
+    try {
+      const url = `${API_ENDPOINTS.CATEGORIES}?page=${page}&size=${size}`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch categories');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Get categories error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get categories configured for the home page (public)
+   * @param take - Max number of categories to return
+   */
+  async getHomeCategories(take = 6): Promise<unknown> {
+    try {
+      const url = `${API_ENDPOINTS.CATEGORIES_HOME}?take=${take}`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch home categories');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Get home categories error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get category by slug (public)
+   * @param slug - Category slug
+   * @returns Category details
+   */
+  async getCategoryBySlug(slug: string): Promise<unknown> {
+    try {
+      const response = await fetch(API_ENDPOINTS.CATEGORY_BY_SLUG(slug));
+
+      if (!response.ok) {
+        throw new Error('Category not found');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Get category by slug error:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get all categories (admin, paginated)
    * @param page - Page number (default: 1)
    * @param size - Page size (default: 100)
@@ -25,7 +88,7 @@ class CategoryService {
   async getCategoriesAdmin(page = 1, size = 100): Promise<unknown> {
     try {
       const url = `${API_ENDPOINTS.CATEGORIES_ADMIN}?page=${page}&size=${size}`;
-      const headers = authService.getAuthHeaders();
+      const headers = adminAuthService.getAuthHeaders();
 
       const response = await fetch(url, {
         headers: headers,
@@ -57,7 +120,7 @@ class CategoryService {
   async getCategoryById(id: string): Promise<unknown> {
     try {
       const response = await fetch(`${API_ENDPOINTS.CATEGORIES_ADMIN}/${id}`, {
-        headers: authService.getAuthHeaders(),
+        headers: adminAuthService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -80,7 +143,7 @@ class CategoryService {
     try {
       const response = await fetch(API_ENDPOINTS.CATEGORIES_ADMIN, {
         method: 'POST',
-        headers: authService.getAuthHeaders(),
+        headers: adminAuthService.getAuthHeaders(),
         body: JSON.stringify(categoryData),
       });
 
@@ -106,7 +169,7 @@ class CategoryService {
     try {
       const response = await fetch(`${API_ENDPOINTS.CATEGORIES_ADMIN}/${categoryId}`, {
         method: 'PUT',
-        headers: authService.getAuthHeaders(),
+        headers: adminAuthService.getAuthHeaders(),
         body: JSON.stringify(categoryData),
       });
 
@@ -129,7 +192,7 @@ class CategoryService {
     try {
       const response = await fetch(`${API_ENDPOINTS.CATEGORIES_ADMIN}/${categoryId}`, {
         method: 'DELETE',
-        headers: authService.getAuthHeaders(),
+        headers: adminAuthService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -144,6 +207,59 @@ class CategoryService {
   }
 
   /**
+   * Upload or replace category image (admin only)
+   */
+  async uploadCategoryImage(categoryId: string, image: File): Promise<unknown> {
+    try {
+      const formData = new FormData();
+      formData.append('image', image);
+
+      const token = adminAuthService.getToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(API_ENDPOINTS.CATEGORY_IMAGE(categoryId), {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error((error as any).error || 'Failed to upload category image');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Upload category image error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete category image (admin only)
+   */
+  async deleteCategoryImage(categoryId: string): Promise<void> {
+    try {
+      const response = await fetch(API_ENDPOINTS.CATEGORY_IMAGE(categoryId), {
+        method: 'DELETE',
+        headers: adminAuthService.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error((error as any).error || 'Failed to delete category image');
+      }
+    } catch (error) {
+      console.error('Delete category image error:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Activate category (admin only)
    * @param categoryId - Category ID
    * @returns void
@@ -152,7 +268,7 @@ class CategoryService {
     try {
       const response = await fetch(`${API_ENDPOINTS.CATEGORIES_ADMIN}/${categoryId}/activate`, {
         method: 'POST',
-        headers: authService.getAuthHeaders(),
+        headers: adminAuthService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -173,7 +289,7 @@ class CategoryService {
     try {
       const response = await fetch(`${API_ENDPOINTS.CATEGORIES_ADMIN}/${categoryId}/deactivate`, {
         method: 'POST',
-        headers: authService.getAuthHeaders(),
+        headers: adminAuthService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -195,7 +311,7 @@ class CategoryService {
   async getProductCategories(productId: string | number): Promise<unknown> {
     try {
       const response = await fetch(API_ENDPOINTS.PRODUCT_CATEGORIES(productId), {
-        headers: authService.getAuthHeaders(),
+        headers: adminAuthService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -219,7 +335,7 @@ class CategoryService {
     try {
       const response = await fetch(API_ENDPOINTS.ADD_PRODUCT_TO_CATEGORY(productId, categoryId), {
         method: 'POST',
-        headers: authService.getAuthHeaders(),
+        headers: adminAuthService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -241,7 +357,7 @@ class CategoryService {
     try {
       const response = await fetch(API_ENDPOINTS.REMOVE_PRODUCT_FROM_CATEGORY(productId, categoryId), {
         method: 'DELETE',
-        headers: authService.getAuthHeaders(),
+        headers: adminAuthService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -264,7 +380,7 @@ class CategoryService {
       console.log('🔵 Fetching category products from:', url);
 
       const response = await fetch(url, {
-        headers: authService.getAuthHeaders(),
+        headers: adminAuthService.getAuthHeaders(),
       });
 
       console.log('🔵 Response status:', response.status);
@@ -300,6 +416,30 @@ class CategoryService {
       console.log('❌ Exception in getCategoryProducts:');
       console.log(error);
       // Return empty array on error instead of throwing
+      return [];
+    }
+  }
+
+  /**
+   * Get all products in a category (public)
+   * @param categoryId - Category ID
+   * @returns List of product IDs
+   */
+  async getCategoryProductsPublic(categoryId: string): Promise<unknown> {
+    try {
+      const url = API_ENDPOINTS.CATEGORY_PRODUCTS_PUBLIC(categoryId);
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return [];
+        }
+        throw new Error('Failed to fetch category products');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Get category products public error:', error);
       return [];
     }
   }

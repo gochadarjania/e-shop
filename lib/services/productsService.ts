@@ -1,5 +1,5 @@
 import { API_ENDPOINTS } from '../config/api';
-import authService from './authService';
+import adminAuthService from './adminAuthService';
 
 interface ProductData {
   slug: string;
@@ -7,6 +7,7 @@ interface ProductData {
   price: number;
   currency: string;
   shortDesc?: string;
+  categoryIds?: string[];
 }
 
 /**
@@ -66,10 +67,10 @@ class ProductsService {
   async getProductsAdmin(page = 1, size = 20): Promise<unknown> {
     try {
       const url = `${API_ENDPOINTS.PRODUCTS_ADMIN}?page=${page}&size=${size}`;
-      const headers = authService.getAuthHeaders();
+      const headers = adminAuthService.getAuthHeaders();
 
       console.log('Fetching admin products with headers:', headers);
-      console.log('Token:', authService.getToken() ? 'Present' : 'Missing');
+      console.log('Token:', adminAuthService.getToken() ? 'Present' : 'Missing');
 
       const response = await fetch(url, {
         headers: headers,
@@ -115,7 +116,7 @@ class ProductsService {
     try {
       const response = await fetch(API_ENDPOINTS.PRODUCTS_ADMIN, {
         method: 'POST',
-        headers: authService.getAuthHeaders(),
+        headers: adminAuthService.getAuthHeaders(),
         body: JSON.stringify(productData),
       });
 
@@ -141,7 +142,7 @@ class ProductsService {
     try {
       const response = await fetch(API_ENDPOINTS.PRODUCT_ADMIN_BY_ID(productId), {
         method: 'PUT',
-        headers: authService.getAuthHeaders(),
+        headers: adminAuthService.getAuthHeaders(),
         body: JSON.stringify(productData),
       });
 
@@ -166,7 +167,7 @@ class ProductsService {
     try {
       const response = await fetch(API_ENDPOINTS.PRODUCT_ADMIN_BY_ID(productId), {
         method: 'DELETE',
-        headers: authService.getAuthHeaders(),
+        headers: adminAuthService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -188,7 +189,7 @@ class ProductsService {
   async getProductImages(productId: string | number): Promise<unknown[]> {
     try {
       const response = await fetch(API_ENDPOINTS.PRODUCT_IMAGES(productId), {
-        headers: authService.getAuthHeaders(),
+        headers: adminAuthService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -217,7 +218,7 @@ class ProductsService {
         formData.append('images', image);
       });
 
-      const token = authService.getToken();
+      const token = adminAuthService.getToken();
       const response = await fetch(API_ENDPOINTS.PRODUCT_IMAGES(productId), {
         method: 'POST',
         headers: {
@@ -249,7 +250,7 @@ class ProductsService {
     try {
       const response = await fetch(API_ENDPOINTS.PRODUCT_IMAGE_DELETE(productId, imageId), {
         method: 'DELETE',
-        headers: authService.getAuthHeaders(),
+        headers: adminAuthService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -274,7 +275,7 @@ class ProductsService {
     try {
       const response = await fetch(API_ENDPOINTS.PRODUCT_IMAGE_SET_MAIN(productId, imageId), {
         method: 'POST',
-        headers: authService.getAuthHeaders(),
+        headers: adminAuthService.getAuthHeaders(),
       });
 
       if (!response.ok) {

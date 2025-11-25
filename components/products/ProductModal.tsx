@@ -11,6 +11,7 @@ interface Product {
   price?: number;
   currency?: string;
   shortDesc?: string;
+  mainImageUrl?: string;
 }
 
 interface ProductImage {
