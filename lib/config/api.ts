@@ -1,5 +1,10 @@
 // API Configuration
-const API_BASE_URL = 'https://65.108.50.33';
+// Backend API (HTTP) - accessed via Next.js API proxy in production
+export const BACKEND_URL = 'http://65.108.50.33';
+
+// Client-side uses /api/proxy/* routes, server-side uses direct backend URL
+const isServer = typeof window === 'undefined';
+const API_BASE_URL = isServer ? BACKEND_URL : '/api/proxy';
 
 export const API_ENDPOINTS = {
   // Authentication
